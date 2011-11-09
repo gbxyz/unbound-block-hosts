@@ -1,0 +1,164 @@
+#!/usr/bin/perl
+# Copyright 2011 Gavin Brown <gavin.brown@uk.com>
+# This program is Free Software, you can use it and/or modify it under the same
+# terms as Perl itself.
+use LWP;
+use HTTP::Request::Common;
+use HTTP::Date;
+use Getopt::Long;
+use strict;
+
+my $opt = {
+	# address to resolve the hosts to:
+	'address'			=> '127.0.0.1',
+
+	# file we write to:
+	'file'				=> '/etc/unbound/local-blocking-data.conf',
+
+	# categories that aren't blocked by default:
+	'shock-sites'			=> undef,
+	'maybe-spy'			=> undef,
+
+	# categories that are blocked by default:
+	'hijack-sites'			=> 1,
+	'spyware-sites'			=> 1,
+	'malware-sites'			=> 1,
+	'doubleclick-sites'		=> 1,
+	'intellitxt-sites'		=> 1,
+	'red-sheriff-sites'		=> 1,
+	'cydoor-sites'			=> 1,
+	'2o7-sites'			=> 1,
+	'ad-sites'			=> 1,
+	'maybe-ads'			=> 1,
+	'yahoo-ad-sites'		=> 1,
+	'hitbox-sites'			=> 1,
+	'extreme-dm-sites'		=> 1,
+	'realmedia-sites'		=> 1,
+	'fastclick-sites'		=> 1,
+	'belo-interactive-sites'	=> 1,
+	'popup-traps'			=> 1,
+	'ecard-scam-sites'		=> 1,
+	'IVW-sites'			=> 1,
+	'wiki-spam-sites'		=> 1,
+};
+my %args = map { length($opt->{$_}) > 0 ? $_.'=s' : $_ } keys(%{$opt});
+GetOptions($opt, %args);
+
+#
+# this is the source of the host data:
+#
+my $url = 'http://someonewhocares.org/hosts/hosts';
+
+my $req = GET($url);
+$req->header('If-Modified-Since' => time2str((stat($opt->{'file'}))[9])) if (-e $opt->{'file'});
+
+my $ua = LWP::UserAgent->new;
+my $res = $ua->request($req);
+
+if ($res->is_error) {
+	printf(STDERR "Error: %s\n", $res->message);
+	exit(1);
+
+} elsif (!$res->is_success) {
+	printf(STDERR "(%s)\n", $res->message);
+	exit;
+
+}
+
+if (!open(FILE, '>'.$opt->{'file'})) {
+	printf(STDERR "Error: cannot open %s: %s\n", $opt->{'file'}, $!);
+	exit(1);
+}
+
+my @names;
+my @sections;
+my $name;
+foreach my $line (split("\n", $res->content)) {
+	if ($line =~ /^\#<\/(.+?)>/) {
+		pop(@sections);
+
+	} elsif ($line =~ /^\#<(.+?)>/) {
+		push(@sections, $1);
+
+	} elsif ($line !~ /^\s*\#/ && $line !~ /^\s*$/) {
+		my $section = $sections[-1];
+		next unless ($opt->{$section});
+		$line =~ s/\s*\#.+$//;
+		(undef, $name) = split(/\s+/, $line, 2);
+		push(@names, $name);
+	}
+}
+
+map {
+	printf(FILE "local-data: \"%s A %s\"\n", $_, $opt->{'address'});
+} @names;
+
+close(FILE);
+
+exit;
+
+__END__
+
+=pod
+
+=head1 NAME
+
+unbound-block-hosts - a script to convert Dan Pollock's ad blocking hosts file
+into Unbound local-data
+
+=head1 SYNOPSIS
+
+    unbound-block-hosts [OPTIONS]
+
+=head1 INTRODUCTION
+
+Dan Pollock (http://someonewhocares.org/) maintains a hosts file that can be
+used by individual users to block hosts that contain advertisements, spyware,
+web trackers and other unpleasant, annoying or malicious content.
+
+This script converts this file into a format that can be loaded into the Unbound
+DNS server, allowing this list to be consumed by an entire network, or by
+devices (such as smart phones and tablets) which don't support a local hosts
+file.
+
+=head1 USAGE
+
+unbound-block-hosts supports the following arguments:
+
+=over
+
+=item --address=ADDRESS
+
+The IP address to resolve to. This is 127.0.0.1 by default.
+
+=item --file=FILE
+
+The file to write. This is /etc/unbound/local-blocking-data.conf by default.
+
+=item --SECTION
+
+The source file contains a number of sections, which can be enabled or disabled
+as required. By default, all sections are enabled except for 'shock-sites' and
+'maybe-spy'.
+
+=back
+
+This script will compare the modification time of the local file to that on the
+remote server, and won't request the file if it hasn't been updated.
+
+=head1 COPYRIGHT
+
+Copyright 2011 Gavin Brown <gavin.brown@uk.com>
+
+This program is Free Software, you can use it and/or modify it under the same
+terms as Perl itself.
+
+=head1 SEE ALSO
+
+=over
+
+=item L<http://someonewhocares.org/hosts/>
+
+=back
+
+=cut
