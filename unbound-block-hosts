@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# Copyright 2011 Gavin Brown <gavin.brown@uk.com>
+# Copyright 2013 Gavin Brown <gavin.brown@uk.com>
 # This program is Free Software, you can use it and/or modify it under the same
 # terms as Perl itself.
 use LWP;
@@ -9,8 +9,9 @@ use Getopt::Long;
 use strict;
 
 my $opt = {
-	# address to resolve the hosts to:
+	# addresses to resolve the hosts to:
 	'address'			=> '127.0.0.1',
+	'v6address'			=> '::1',
 
 	# file we write to:
 	'file'				=> '/etc/unbound/local-blocking-data.conf',
@@ -41,8 +42,8 @@ my $opt = {
 	'IVW-sites'			=> 1,
 	'wiki-spam-sites'		=> 1,
 };
-my %args = map { length($opt->{$_}) > 0 ? $_.'=s' : $_ } keys(%{$opt});
-GetOptions($opt, %args);
+my @args = map { length($opt->{$_}) > 0 ? $_.'=s' : $_ } keys(%{$opt});
+GetOptions($opt, @args);
 
 #
 # this is the source of the host data:
@@ -91,6 +92,7 @@ foreach my $line (split("\n", $res->content)) {
 
 map {
 	printf(FILE "local-data: \"%s A %s\"\n", $_, $opt->{'address'});
+	printf(FILE "local-data: \"%s AAAA %s\"\n", $_, $opt->{'v6address'});
 } @names;
 
 close(FILE);
@@ -131,6 +133,10 @@ unbound-block-hosts supports the following arguments:
 
 The IP address to resolve to. This is 127.0.0.1 by default.
 
+=item --v6address=ADDRESS
+
+The IPv6 address to resolve to. This is ::1 by default.
+
 =item --file=FILE
 
 The file to write. This is /etc/unbound/local-blocking-data.conf by default.
@@ -148,7 +154,7 @@ remote server, and won't request the file if it hasn't been updated.
 
 =head1 COPYRIGHT
 
-Copyright 2011 Gavin Brown <gavin.brown@uk.com>
+Copyright 2013 Gavin Brown <gavin.brown@uk.com>
 
 This program is Free Software, you can use it and/or modify it under the same
 terms as Perl itself.
