@@ -6,6 +6,7 @@ use LWP;
 use HTTP::Request::Common;
 use HTTP::Date;
 use Getopt::Long;
+use Pod::Usage;
 use strict;
 
 my $opt = {
@@ -15,6 +16,8 @@ my $opt = {
 
 	# file we write to:
 	'file'				=> '/etc/unbound/local-blocking-data.conf',
+
+	'help'				=> 0,
 
 	# categories that aren't blocked by default:
 	'shock-sites'			=> undef,
@@ -43,7 +46,13 @@ my $opt = {
 	'wiki-spam-sites'		=> 1,
 };
 my @args = map { length($opt->{$_}) > 0 ? $_.'=s' : $_ } keys(%{$opt});
+push(@args, 'help');
 GetOptions($opt, @args);
+
+if ($opt->{'help'}) {
+	pod2usage('-verbose' => 99, '-sections' => 'SYNOPSIS|USAGE|INTEGRATING INTO UNBOUND');
+	exit;
+}
 
 #
 # this is the source of the host data:
@@ -151,6 +160,15 @@ as required. By default, all sections are enabled except for 'shock-sites' and
 
 This script will compare the modification time of the local file to that on the
 remote server, and won't request the file if it hasn't been updated.
+
+=head1 INTEGRATING INTO UNBOUND
+
+To use the output of this file with Unbound, use the "include:" directive within
+the "server:" block, like so:
+
+	server:
+		access-control: 0.0.0.0/8 allow
+		include: /etc/unbound/local-blocking-data.conf
 
 =head1 COPYRIGHT
 
