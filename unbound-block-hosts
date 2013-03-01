@@ -99,9 +99,11 @@ foreach my $line (split("\n", $res->content)) {
 	}
 }
 
+
+printf(FILE "server:\n");
 map {
-	printf(FILE "local-data: \"%s A %s\"\n", $_, $opt->{'address'});
-	printf(FILE "local-data: \"%s AAAA %s\"\n", $_, $opt->{'v6address'});
+	printf(FILE "\tlocal-data: \"%s A %s\"\n", $_, $opt->{'address'});
+	printf(FILE "\tlocal-data: \"%s AAAA %s\"\n", $_, $opt->{'v6address'});
 } @names;
 
 close(FILE);
