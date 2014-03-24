@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 # Copyright 2013 Gavin Brown <gavin.brown@uk.com>
 # This program is Free Software, you can use it and/or modify it under the same
 # terms as Perl itself.
