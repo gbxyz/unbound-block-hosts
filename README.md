@@ -18,6 +18,10 @@ DNS server, allowing this list to be consumed by an entire network, or by
 devices (such as smart phones and tablets) which don't support a local hosts
 file.
 
+# REQUIREMENTS
+
+On FreeBSD, you will need www/p5-libwww.
+
 # USAGE
 
 unbound-block-hosts supports the following arguments:
