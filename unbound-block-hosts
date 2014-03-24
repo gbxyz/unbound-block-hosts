@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 # Copyright 2013 Gavin Brown <gavin.brown@uk.com>
 # This program is Free Software, you can use it and/or modify it under the same
 # terms as Perl itself.
@@ -15,7 +15,7 @@ my $opt = {
 	'v6address'			=> '::1',
 
 	# file we write to:
-	'file'				=> '/etc/unbound/local-blocking-data.conf',
+	'file'				=> '/var/unbound/local-blocking-data.conf',
 
 	'help'				=> 0,
 
@@ -148,7 +148,7 @@ The IPv6 address to resolve to. This is ::1 by default.
 
 =item --file=FILE
 
-The file to write. This is /etc/unbound/local-blocking-data.conf by default.
+The file to write. This is /var/unbound/local-blocking-data.conf by default.
 
 =item --SECTION
 
@@ -168,7 +168,7 @@ the "server:" block, like so:
 
 	server:
 		access-control: 0.0.0.0/8 allow
-		include: /etc/unbound/local-blocking-data.conf
+		include: /var/unbound/local-blocking-data.conf
 
 =head1 COPYRIGHT
 
