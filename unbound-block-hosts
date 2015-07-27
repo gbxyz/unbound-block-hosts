@@ -32,8 +32,10 @@ my $opt = {
 	'red-sheriff-sites'		=> 1,
 	'cydoor-sites'			=> 1,
 	'2o7-sites'			=> 1,
-	'ad-sites'			=> 1,
 	'maybe-ads'			=> 1,
+	'ad-sites'			=> 1,
+	'canvass-fingerprinting-sites'	=> 1,
+	'evercookies-sites'		=> 1,
 	'yahoo-ad-sites'		=> 1,
 	'hitbox-sites'			=> 1,
 	'extreme-dm-sites'		=> 1,
@@ -44,6 +46,7 @@ my $opt = {
 	'ecard-scam-sites'		=> 1,
 	'IVW-sites'			=> 1,
 	'wiki-spam-sites'		=> 1,
+	'Phorm-sites'			=> 1,
 };
 my @args = map { length($opt->{$_}) > 0 ? $_.'=s' : $_ } keys(%{$opt});
 push(@args, 'help');
