@@ -15,7 +15,7 @@ my $opt = {
 	'v6address'			=> '::1',
 
 	# file we write to:
-	'file'				=> '/var/unbound/local-blocking-data.conf',
+	'file'				=> '/etc/unbound/local-blocking-data.conf',
 
 	'help'				=> 0,
 
