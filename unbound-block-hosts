@@ -47,6 +47,7 @@ my $opt = {
 	'IVW-sites'			=> 1,
 	'wiki-spam-sites'		=> 1,
 	'Phorm-sites'			=> 1,
+	'Windows10'			=> 1,	
 };
 my @args = map { length($opt->{$_}) > 0 ? $_.'=s' : $_ } keys(%{$opt});
 push(@args, 'help');
