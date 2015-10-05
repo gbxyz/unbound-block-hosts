@@ -45,6 +45,7 @@ my $opt = {
 	'popup-traps'			=> 1,
 	'ecard-scam-sites'		=> 1,
 	'IVW-sites'			=> 1,
+	'oewabox-sites'			=> 1,
 	'wiki-spam-sites'		=> 1,
 	'Phorm-sites'			=> 1,
 	'Windows10'			=> 1,	
