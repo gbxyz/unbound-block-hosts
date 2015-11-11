@@ -75,7 +75,11 @@ if ($res->is_error) {
 	exit(1);
 
 } elsif (!$res->is_success) {
-	printf(STDERR "(%s)\n", $res->message);
+	if ($res->code(304)) {
+		printf(STDOUT "(%s)\n", $res->message);
+	} else {
+		printf(STDERR "(%s)\n", $res->message);
+	}
 	exit;
 
 }
