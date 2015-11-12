@@ -14,6 +14,9 @@ my $opt = {
 	'address'			=> '127.0.0.1',
 	'v6address'			=> '::1',
 
+	# url we pull from:
+	'url'				=> 'http://someonewhocares.org/hosts/hosts',
+
 	# file we write to:
 	'file'				=> '/etc/unbound/local-blocking-data.conf',
 
@@ -48,7 +51,8 @@ my $opt = {
 	'oewabox-sites'			=> 1,
 	'wiki-spam-sites'		=> 1,
 	'Phorm-sites'			=> 1,
-	'Windows10'			=> 1,	
+	'Windows10'			=> 1,
+	'local-data'			=> 1, # if you create your own custom file, make sure to enclose its contents in tags with this name
 };
 my @args = map { length($opt->{$_}) > 0 ? $_.'=s' : $_ } keys(%{$opt});
 push(@args, 'help');
@@ -59,12 +63,7 @@ if ($opt->{'help'}) {
 	exit;
 }
 
-#
-# this is the source of the host data:
-#
-my $url = 'http://someonewhocares.org/hosts/hosts';
-
-my $req = GET($url);
+my $req = GET($opt->{'url'});
 $req->header('If-Modified-Since' => time2str((stat($opt->{'file'}))[9])) if (-e $opt->{'file'});
 
 my $ua = LWP::UserAgent->new;
@@ -77,8 +76,10 @@ if ($res->is_error) {
 } elsif (!$res->is_success) {
 	if ($res->code(304)) {
 		printf(STDOUT "(%s)\n", $res->message);
+
 	} else {
 		printf(STDERR "(%s)\n", $res->message);
+
 	}
 	exit;
 
@@ -92,6 +93,7 @@ if (!open(FILE, '>'.$opt->{'file'})) {
 my @names;
 my @sections;
 my $name;
+my $discarded = 0;
 foreach my $line (split("\n", $res->content)) {
 	if ($line =~ /^\#<\/(.+?)>/) {
 		pop(@sections);
@@ -101,12 +103,18 @@ foreach my $line (split("\n", $res->content)) {
 
 	} elsif ($line !~ /^\s*\#/ && $line !~ /^\s*$/) {
 		my $section = $sections[-1];
-		next unless ($opt->{$section});
-		$line =~ s/\s*\#.+$//;
-		(undef, $name) = split(/\s+/, $line, 2);
-		push(@names, $name);
+		if (!$section) {
+			$discarded++;
+
+		} elsif ($opt->{$section}) {
+			$line =~ s/\s*\#.+$//;
+			(undef, $name) = split(/\s+/, $line, 2);
+			push(@names, $name);
+		}
 	}
 }
+
+printf(STDERR "Warning: discarded %u lines that were found outside section tags\n", $discarded) if ($discarded > 0);
 
 map {
 	printf(FILE "local-data: \"%s A %s\"\n", $_, $opt->{'address'});
@@ -147,23 +155,27 @@ unbound-block-hosts supports the following arguments:
 
 =over
 
-=item --address=ADDRESS
+=item C<--address=ADDRESS>
 
-The IP address to resolve to. This is 127.0.0.1 by default.
+The IP address to resolve to. This is C<127.0.0.1> by default.
 
-=item --v6address=ADDRESS
+=item C<--v6address=ADDRESS>
 
-The IPv6 address to resolve to. This is ::1 by default.
+The IPv6 address to resolve to. This is C<::1> by default.
 
-=item --file=FILE
+=item C<--url=URL>
 
-The file to write. This is /var/unbound/local-blocking-data.conf by default.
+The URL to retrieve. This is L<http://someonewhocares.org/hosts/hosts> by default.
 
-=item --SECTION
+=item C<--file=FILE>
+
+The file to write. This is C</var/unbound/local-blocking-data.conf> by default.
+
+=item C<--SECTION>
 
 The source file contains a number of sections, which can be enabled or disabled
-as required. By default, all sections are enabled except for 'shock-sites' and
-'maybe-spy'.
+as required. By default, all sections are enabled except for C<shock-sites> and
+C<maybe-spy>.
 
 =back
 
@@ -172,8 +184,8 @@ remote server, and won't request the file if it hasn't been updated.
 
 =head1 INTEGRATING INTO UNBOUND
 
-To use the output of this file with Unbound, use the "include:" directive within
-the "server:" block, like so:
+To use the output of this file with Unbound, use the C<include> directive within
+the C<server> block, like so:
 
 	server:
 		access-control: 0.0.0.0/8 allow
@@ -181,7 +193,7 @@ the "server:" block, like so:
 
 =head1 COPYRIGHT
 
-Copyright 2013 Gavin Brown <gavin.brown@uk.com>
+Copyright 2015 Gavin Brown <gavin.brown@uk.com>
 
 This program is Free Software, you can use it and/or modify it under the same
 terms as Perl itself.
@@ -189,6 +201,8 @@ terms as Perl itself.
 =head1 SEE ALSO
 
 =over
+
+=item L<https://github.com/jodrell/unbound-block-hosts>
 
 =item L<http://someonewhocares.org/hosts/>
 
