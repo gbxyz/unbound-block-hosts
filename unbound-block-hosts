@@ -14,6 +14,10 @@ my $opt = {
 	'address'			=> '127.0.0.1',
 	'v6address'			=> '::1',
 
+	# Return NXDOMAIN instead of A/AAAA for blocked domains.
+	# Not recommended as all record types will return NXDOMAIN, including MX.
+	'return_nxdomain'		=> 0,
+
 	# url we pull from:
 	'url'				=> 'http://someonewhocares.org/hosts/hosts',
 
@@ -116,10 +120,16 @@ foreach my $line (split("\n", $res->content)) {
 
 printf(STDERR "Warning: discarded %u lines that were found outside section tags\n", $discarded) if ($discarded > 0);
 
-map {
-	printf(FILE "local-data: \"%s A %s\"\n", $_, $opt->{'address'});
-	printf(FILE "local-data: \"%s AAAA %s\"\n", $_, $opt->{'v6address'});
-} @names;
+if ($opt->{'return_nxdomain'}) {
+	map {
+		printf(FILE "local-zone: \"%s\" always_nxdomain\n", $_);
+	} @names;
+} else {
+	map {
+		printf(FILE "local-data: \"%s A %s\"\n", $_, $opt->{'address'});
+		printf(FILE "local-data: \"%s AAAA %s\"\n", $_, $opt->{'v6address'});
+	} @names;
+}
 
 close(FILE);
 
