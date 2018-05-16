@@ -102,7 +102,13 @@ foreach my $line (split("\n", $res->content)) {
 	if ($line =~ /^\#<\/(.+?)>/) {
 		pop(@sections);
 
+	} elsif ($line =~ /^\#&lt;\/(.+?)&gt;/) {
+		pop(@sections);
+
 	} elsif ($line =~ /^\#<(.+?)>/) {
+		push(@sections, $1);
+
+	} elsif ($line =~ /^\#&lt;(.+?)&gt;/) {
 		push(@sections, $1);
 
 	} elsif ($line !~ /^\s*\#/ && $line !~ /^\s*$/) {
